@@ -1,0 +1,27 @@
+PKG abduco weechat 
+
+SYSRC sshd_enable=YES
+SYSRC weechat_enable=YES
+
+CMD pw useradd -n weechat -m -s /bin/sh -c "WeeChat IRC"
+CMD mkdir -p /home/weechat/.ssh
+CMD chmod 700 /home/weechat/.ssh
+CMD chown -R weechat:weechat /home/weechat/.ssh
+MOUNT /home/jay/.ssh/authorized_keys /home/weechat/.ssh/authorized_keys nullfs ro 0 0
+
+
+CMD mkdir -p /home/weechat/.config/weechat
+CMD mkdir -p /home/weechat/.local
+CMD chown -R weechat:weechat /home/weechat
+
+MOUNT /zroot/jails/weechat/config /home/weechat/.config/weechat nullfs rw 0 0
+MOUNT /zroot/jails/weechat/local /home/weechat/.local nullfs rw 0 0
+
+CP usr /
+
+CMD chmod +x /usr/local/etc/rc.d/weechat
+
+CMD sh -c 'echo "" >> /etc/ssh/sshd_config'
+CMD sh -c 'echo "Match User weechat" >> /etc/ssh/sshd_config'
+CMD sh -c 'echo "    ForceCommand /usr/local/bin/abduco -a /var/run/weechat/abduco.sock" >> /etc/ssh/sshd_config'
+CMD sh -c 'echo "    PasswordAuthentication no" >> /etc/ssh/sshd_config'

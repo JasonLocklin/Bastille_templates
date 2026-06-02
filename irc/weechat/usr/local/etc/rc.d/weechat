@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# PROVIDE: weechat
+# REQUIRE: NETWORKING LOGIN
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="weechat"
+rcvar="weechat_enable"
+weechat_user="weechat"
+pidfile="/var/run/weechat/weechat.pid"
+socket="/var/run/weechat/abduco.sock"
+
+start_cmd="weechat_start"
+stop_cmd="weechat_stop"
+status_cmd="weechat_status"
+
+weechat_start() {
+    install -d -o weechat -m 700 /var/run/weechat
+    /usr/sbin/daemon -u weechat -p ${pidfile} -r \
+        /usr/local/bin/abduco -c ${socket} /usr/local/bin/weechat
+}
+
+weechat_stop() {
+    if [ -f ${pidfile} ]; then
+        kill $(cat ${pidfile})
+        rm -f ${pidfile}
+    fi
+}
+
+weechat_status() {
+    if [ -f ${pidfile} ] && kill -0 $(cat ${pidfile}) 2>/dev/null; then
+        echo "weechat is running as pid $(cat ${pidfile})"
+    else
+        echo "weechat is not running"
+    fi
+}
+
+load_rc_config $name
+run_rc_command "$1"
