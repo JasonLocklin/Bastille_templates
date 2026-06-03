@@ -1,4 +1,4 @@
-PKG abduco weechat 
+PKG abduco weechat en-aspell
 
 SYSRC sshd_enable=YES
 SYSRC weechat_enable=YES
