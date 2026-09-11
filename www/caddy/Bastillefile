@@ -1,3 +1,53 @@
+# All values below come from an --arg-file kept outside this template
+# directory (you placed it in root's home) and passed at apply time:
+#
+#   bastille template caddy <project>/<template> \
+#     --arg-file /root/caddy.env
+#
+# Every variable used with ${NAME} inside usr/local/etc/caddy/Caddyfile must
+# have a matching ARG line here, even with no default - RENDER only
+# substitutes variables that were declared via ARG. A name present in the
+# --arg-file but missing its ARG line here is silently left as a literal
+# "${NAME}" string in the rendered file.
+ARG DOMAIN
+ARG PORKBUN_API_KEY
+ARG PORKBUN_API_SECRET_KEY
+ARG READECK_TOKEN_HOST
+ARG READECK_IP
+ARG READECK_PATH
+ARG MINIFLUX_TOKEN_HOST
+ARG MINIFLUX_IP
+ARG MINIFLUX_PATH
+ARG KAVITA_TOKEN_HOST
+ARG KAVITA_IP
+ARG WEBDAV_TOKEN_HOST
+ARG WEBDAV_IP
+
 PKG caddy
 SYSRC caddy_enable=YES
+SYSRC caddy_user=www
+SYSRC caddy_group=www
+
+# pkg install caddy creates /var/db/caddy and /var/log/caddy owned by root
+# (see FreeBSD www/caddy pkg-message) - since Caddy now runs as www:www, it
+# needs write access to both before it can start. The chown here only
+# matters for the brief pre-MOUNT window; the host-side chown on
+# /var/log/jails/caddy is what actually governs write access at runtime
+# once the MOUNT below layers over /var/log/caddy.
+CMD mkdir -p /var/db/caddy /var/log/caddy
+CMD chown -R www:www /var/db/caddy /var/log/caddy
+
+# Host-side counterpart (run once on beastie, not part of this template):
+#   mkdir -p /var/log/jails/caddy
+#   chown -R 80:80 /var/log/jails/caddy
+MOUNT /var/log/jails/caddy var/log/caddy nullfs rw 0 0
+
+CP usr /
+
+# Replace every declared ARG's ${NAME} placeholder inside the Caddyfile with
+# the value supplied via --arg-file. Must run after CP, since the file has
+# to exist inside the jail before RENDER can rewrite it.
+RENDER usr/local/etc/caddy/Caddyfile
+
 SERVICE caddy start
+

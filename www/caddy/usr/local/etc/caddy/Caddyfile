@@ -1,0 +1,105 @@
+{
+	acme_dns porkbun {
+		api_key ${PORKBUN_API_KEY}
+		api_secret_key ${PORKBUN_API_SECRET_KEY}
+	}
+
+	admin off
+
+	http_port 8080
+	https_port 8443
+}
+
+*.${DOMAIN} {
+	abort
+}
+
+${READECK_TOKEN_HOST}.${DOMAIN} {
+	reverse_proxy /${READECK_PATH}/* ${READECK_IP}:8000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+	}
+
+	redir / https://${DOMAIN} 301
+
+	header {
+		Strict-Transport-Security "max-age=31536200; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		-Server
+	}
+}
+
+readeck.${DOMAIN} {
+	handle /${READECK_PATH}/@b/* {
+		reverse_proxy ${READECK_IP}:8000
+	}
+
+	handle /${READECK_PATH}/bm/* {
+		reverse_proxy ${READECK_IP}:8000
+	}
+
+	handle /${READECK_PATH}/assets/* {
+		reverse_proxy ${READECK_IP}:8000
+	}
+
+	handle {
+		redir https://${DOMAIN} 301
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536200; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		-Server
+	}
+}
+
+${MINIFLUX_TOKEN_HOST}.${DOMAIN} {
+	reverse_proxy /${MINIFLUX_PATH}/* ${MINIFLUX_IP}:8080 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+	}
+
+	redir / https://${DOMAIN} 301
+
+	header {
+		Strict-Transport-Security "max-age=31536200; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		-Server
+	}
+}
+
+${KAVITA_TOKEN_HOST}.${DOMAIN} {
+	reverse_proxy ${KAVITA_IP}:5000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536200; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		-Server
+	}
+}
+
+${WEBDAV_TOKEN_HOST}.${DOMAIN} {
+	reverse_proxy ${WEBDAV_IP}:80 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536200; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		-Server
+	}
+}
+
